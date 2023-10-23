@@ -1,0 +1,6 @@
+venv
+.idea
+.env
+/.env
+/images
+articles.json
