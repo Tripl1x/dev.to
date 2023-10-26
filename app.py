@@ -1,94 +1,120 @@
 import requests
-from flask import Flask
+from flask import Flask, request, send_file
 import json
 
+from functions import get_api_token, save_images, save_articles
+from icecream import ic
+from classes import DevArticles, DevComments, DevUser, Downloader
+from icecream import ic
 
-# Функция для получения токена
-def get_api_token():
-    import dotenv
-
-    search_file = dotenv.find_dotenv()
-    token = dotenv.get_key(search_file, 'API_TOKEN')
-
-    if not token:
-        raise Exception('There are no api token. Write it to .env file')
-    return token
-
-
-api_token = get_api_token()
-
-
-# Функция для записи постов в json файл
-def _save_articles(articles):
-    with open('articles.json', 'w') as file:
-        json.dump(articles, file)
-
-
-# Функция для сохранения обложек в папку 'images'
-def _save_arts(link):
-    filename = link.split('/')[-1]
-    r = requests.get(link, allow_redirects=True)
-    with open(f'images/{filename}', 'wb') as file:
-        file.write(r.content)
-
-
-# Класс для обработки ошибок
-class DevToException(Exception):
-    pass
-
-
-# Класс для осуществления работы над постами
-class DevArticles:
-
-    def _get_articles_info(self):
-
-        api_token = get_api_token()
-        url = 'https://dev.to/api/articles/me'
-        headers = {'api-key': api_token}
-
-        response = requests.get(url, headers=headers)
-        if not response.ok:
-            raise DevToException('Failed to make response for getting articles. ' + str(response.status_code))
-
-        return response.json()
-
-    def download_articles_info(self):
-        articles_list = self._get_articles_info()
-        _save_articles(articles_list)
-
-    def download_articles_images(self):
-        articles_list = self._get_articles_info()
-        images_urls = tuple(article_info['cover_image'] for article_info in articles_list)
-        for img_url in images_urls:
-            _save_arts(img_url)
-
-
-dev_to = DevArticles()
 
 app = Flask(__name__)
 
+#  для тестов
+# art_id = 99986
+# user_id = 101616
+# com_id = 'd1a1'
+# author = javinpaul
+# slug = 10-data-science-and-machine-learning-courses-for-programmers-looking-to-switch-career-57kd
+# url = author / slug
 
-@app.route('/')
+@app.get('/')
 def _welcome():
     return "<h1>Welcome</h1>"
 
+@app.get('/author')
+def _author():
+    dev = DevUser()
+    author = dev.get_myself()
+    return author
 
-@app.route('/user/<name>')
-def _user(name):
-    return "<h1>Это профиль пользователя %s</h1>" % name
+@app.get('/author/articles')
+def _author_articles():
+
+    dev = DevArticles()
+    articles = dev.get_my_articles()
+
+    download = request.args.get('download', False)
+    if download:
+        Downloader.save_articles(articles)
+
+    return articles
+
+@app.get('/author/image')
+def _author_images():
+
+    dev = DevArticles()
+    images = dev.get_my_articles_images()
+
+    download = request.args.get('download', False)
+    if download:
+        Downloader.save_images(images)
+
+    return images
 
 
-@app.route('/articles')
-def _all_articles():
-    dev_to.download_articles_info()
-    return "Articles were successfully saved to the json file"
+@app.get('/user/<user_id>')
+def _user_info(user_id):
+    dev = DevUser()
+    user = dev.get_user_by_id(user_id)
+
+    download = request.args.get('download', False)
+    if download:
+        Downloader.save_user(user)
+    return user
 
 
-@app.route('/covers_images')
-def _covers_images():
-    dev_to.download_articles_images()
-    return "Covers were successfully saved to the 'images'"
+@app.get('/article/<path:url>')
+def _article_info(url):
+    html = request.args.get('html', False)
+
+    dev = DevArticles()
+    article = dev.get_article_by_url(*url.split('/'), html)
+
+    if html:
+        article = article['body_html']
+
+    return article
+
+@app.get('/comment/<comment_id>')
+def _get_comment(comment_id):
+    html = request.args.get('html', False)
+
+    dev = DevComments()
+    comment = dev.get_comments_by_id(comment_id, html)
+
+    download = request.args.get('download', False)
+    if download:
+        Downloader.save_user(user)
+
+    if html:
+        comment = comment['body_html']
+
+    return comment
+
+@app.get('/thread/<article_id>')
+def _get_thread(article_id):
+    is_podcast = request.args.get('podcast', False)
+
+    dev = DevComments()
+    thread = dev.get_comments_from_article(article_id, is_podcast)
+
+    download = request.args.get('download', False)
+    if download:
+        Downloader.save_user(user)
+
+    return thread
+
+
+@app.get('/image-example')
+def fl():
+    return send_file('static/images/background.png', mimetype='image/gif')
+
+
 
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+

@@ -4,3 +4,7 @@ venv
 /.env
 /images
 articles.json
+__pycache__
+flake-report
+
+
