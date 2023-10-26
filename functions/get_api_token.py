@@ -1,4 +1,5 @@
-from exceptions import AppEception
+from exceptions import AppException
+
 
 # Функция для получения токена
 def get_api_token() -> str:
@@ -8,5 +9,5 @@ def get_api_token() -> str:
     token = dotenv.get_key(search_file, 'API_TOKEN')
 
     if not token:
-        raise AppEception('Отсутствует api token сайта. Добавьте его в файл .env')
+        raise AppException('Отсутствует api token сайта. Добавьте его в файл .env')
     return token

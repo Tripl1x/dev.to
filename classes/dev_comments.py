@@ -1,5 +1,6 @@
-from .dev_abc import DevRoot
 from exceptions import DevException
+from .dev_abc import DevRoot
+
 
 class DevComments(DevRoot):
     def __init__(self):

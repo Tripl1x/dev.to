@@ -1,14 +1,8 @@
-import requests
-from flask import Flask, request, send_file
 import json
 
-from functions import get_api_token, save_images, save_articles
-from icecream import ic
+from flask import Flask, request, send_file
+
 from classes import DevArticles, DevComments, DevUser, Downloader
-from icecream import ic
-
-
-app = Flask(__name__)
 
 #  для тестов
 # art_id = 99986
@@ -18,9 +12,13 @@ app = Flask(__name__)
 # slug = 10-data-science-and-machine-learning-courses-for-programmers-looking-to-switch-career-57kd
 # url = author / slug
 
+app = Flask(__name__)
+
+
 @app.get('/')
 def _welcome():
     return "<h1>Welcome</h1>"
+
 
 @app.get('/author')
 def _author():
@@ -28,9 +26,9 @@ def _author():
     author = dev.get_myself()
     return author
 
+
 @app.get('/author/articles')
 def _author_articles():
-
     dev = DevArticles()
     articles = dev.get_my_articles()
 
@@ -40,9 +38,9 @@ def _author_articles():
 
     return articles
 
+
 @app.get('/author/image')
 def _author_images():
-
     dev = DevArticles()
     images = dev.get_my_articles_images()
 
@@ -50,7 +48,7 @@ def _author_images():
     if download:
         Downloader.save_images(images)
 
-    return images
+    return json.dumps(images)
 
 
 @app.get('/user/<user_id>')
@@ -76,6 +74,7 @@ def _article_info(url):
 
     return article
 
+
 @app.get('/comment/<comment_id>')
 def _get_comment(comment_id):
     html = request.args.get('html', False)
@@ -85,12 +84,13 @@ def _get_comment(comment_id):
 
     download = request.args.get('download', False)
     if download:
-        Downloader.save_user(user)
+        Downloader.save_comments(comment)
 
     if html:
         comment = comment['body_html']
 
     return comment
+
 
 @app.get('/thread/<article_id>')
 def _get_thread(article_id):
@@ -101,7 +101,7 @@ def _get_thread(article_id):
 
     download = request.args.get('download', False)
     if download:
-        Downloader.save_user(user)
+        Downloader.save_comments(thread)
 
     return thread
 
@@ -111,10 +111,5 @@ def fl():
     return send_file('static/images/background.png', mimetype='image/gif')
 
 
-
-
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-

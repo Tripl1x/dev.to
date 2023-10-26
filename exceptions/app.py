@@ -1,2 +1,2 @@
-class AppEception(Exception):
-	pass
+class AppException(Exception):
+    pass

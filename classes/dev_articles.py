@@ -1,5 +1,5 @@
-from .dev_abc import DevRoot
 from exceptions import DevException
+from .dev_abc import DevRoot
 
 
 # Класс для осуществления работы над постами
@@ -25,7 +25,7 @@ class DevArticles(DevRoot):
         images_urls = tuple(article_info['cover_image'] for article_info in articles_list)
         return images_urls
 
-    def get_article_by_url(self, username:str, slug: str, html=False, markdown=False):
+    def get_article_by_url(self, username: str, slug: str, html=False, markdown=False):
         sub_url = f'{username}/{slug}'
         response = self._make_request('GET', sub_url)
         if not response.ok:
@@ -37,4 +37,3 @@ class DevArticles(DevRoot):
         if not markdown:
             del response['body_markdown']
         return response
-

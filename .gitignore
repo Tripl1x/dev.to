@@ -6,5 +6,4 @@ venv
 articles.json
 __pycache__
 flake-report
-
-
+app_cache
